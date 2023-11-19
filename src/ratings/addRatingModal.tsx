@@ -43,7 +43,7 @@ export const AddRatingModal: FC<AddRatingModalProps> = (props) => {
     return (
         <>
             <Modal.Header closeButton>
-                <Modal.Title>Ajout de note et commentaire</Modal.Title>
+                <Modal.Title>Laisser un avis</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Card key={'addRating'} bg="light" style={{ marginTop: '10px', marginBottom: '10px' }}>
@@ -70,22 +70,28 @@ export const AddRatingModal: FC<AddRatingModalProps> = (props) => {
                                 <Form.Label>Commentaire (facultatif)</Form.Label>
                                 <Form.Control type="text" name="comment" onChange={changeHandler} as="textarea" />
                             </Form.Group>
-
-                            <Button
-                                onClick={submitHandler}
-                                disabled={!canSubmit()}
-                                variant="success"
-                                style={{ marginRight: '10px' }}
-                            >
-                                Enregistrer
-                            </Button>
-                            <Button onClick={props.onClose} variant="secondary">
-                                Annuler
-                            </Button>
                         </Form>
                     </Card.Body>
+                    <Card.Footer>
+                        <i>
+                            Votre avis sera vérifié par l&apos;un de nos employés avant d&apos;être affiché sur le site.
+                        </i>
+                    </Card.Footer>
                 </Card>
             </Modal.Body>
+            <Modal.Footer>
+                <Button
+                    onClick={submitHandler}
+                    disabled={!canSubmit()}
+                    variant="success"
+                    style={{ marginRight: '10px' }}
+                >
+                    Enregistrer
+                </Button>
+                <Button onClick={props.onClose} variant="secondary">
+                    Fermer
+                </Button>
+            </Modal.Footer>
         </>
     );
 };

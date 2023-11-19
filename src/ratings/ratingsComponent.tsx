@@ -1,15 +1,15 @@
 import React, { FC } from 'react';
-import { Badge, Card, Col, Row } from 'react-bootstrap';
+import { Badge, Button, Card, Col, Container, Row } from 'react-bootstrap';
 import { Rating } from './types';
 
 interface RatingsComponentProps {
     ratings: Rating[];
+    addRating: () => void;
 }
 
 export const RatingsComponent: FC<RatingsComponentProps> = (props) => {
     const renderRecentRatingsToBeReviewed = (ratings: Rating[]) => {
         return ratings
-            .filter((rating) => !rating.approved)
             .sort((a, b) => b.creationDateUnix - a.creationDateUnix)
             .slice(0, 2)
             .map((ratingEntry) => {
@@ -39,13 +39,15 @@ export const RatingsComponent: FC<RatingsComponentProps> = (props) => {
     };
 
     return (
-        <>
-            <Card bg="light" style={{ marginTop: '10px', marginBottom: '10px' }}>
-                <Card.Header>
-                    <Card.Title style={{ textAlign: 'center' }}>Commentaires à revoir</Card.Title>
-                </Card.Header>
-                <Card.Body>{renderRecentRatingsToBeReviewed(props.ratings)}</Card.Body>
-            </Card>
-        </>
+        <Container style={{ margin: 0, padding: 0 }}>
+            <Row>
+                <Col style={{ textAlign: 'center' }}>
+                    <Button onClick={props.addRating}>Laisser un avis</Button>
+                </Col>
+            </Row>
+            <Row>
+                <Col>{renderRecentRatingsToBeReviewed(props.ratings)}</Col>
+            </Row>
+        </Container>
     );
 };
