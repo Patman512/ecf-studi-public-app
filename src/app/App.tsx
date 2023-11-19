@@ -1,13 +1,21 @@
 import React, { FC, useEffect, useState } from 'react';
-import { CarOffer, CarOffersComponent, Equipment } from '../carOffers';
+import { CarOffer, CarOffersComponent, Equipment, ViewCarOfferModal } from '../carOffers';
 import { OpeningHour, OpeningHoursComponent } from '../openingHours';
 import { AddRatingModal, Rating, RatingsComponent } from '../ratings';
 import { Service, ServicesComponent } from '../services';
 import { getHomePageData } from './api';
-import { Button, Col, Container, Modal, Row, Toast, ToastContainer } from 'react-bootstrap';
+import { Card, Col, Container, Modal, Nav, Navbar, Row, Toast, ToastContainer } from 'react-bootstrap';
+import { ContactComponent, ContactFormModal } from '../contact';
+
+enum BodyContent {
+    homepage = 1,
+    carOffers,
+    ratings
+}
 
 enum ModalContent {
-    addRating = 1,
+    viewCarOffer = 1,
+    addRating,
     contactForm
 }
 
@@ -17,8 +25,10 @@ export const App: FC = () => {
     const [ratings, setRatings] = useState<Rating[]>([]);
     const [services, setServices] = useState<Service[]>([]);
     const [openingHours, setOpeningHours] = useState<OpeningHour[]>([]);
+    const [bodyContent, setBodyContent] = useState<BodyContent | null>(BodyContent.homepage);
     const [modalShow, setModalShow] = useState(false);
     const [modalContent, setModalContent] = useState<ModalContent | null>(null);
+    const [modalCarOffer, setModalCarOffer] = useState<CarOffer>();
     const [errorShow, setErrorShow] = useState(false);
     const [error, setError] = useState<string | undefined>();
 
@@ -44,9 +54,63 @@ export const App: FC = () => {
 
     useEffect(() => fetchData, []);
 
+    const renderBodyContent = () => {
+        switch (bodyContent) {
+            case BodyContent.homepage:
+                return (
+                    <Container>
+                        <Row>
+                            <Col lg="7">
+                                <ServicesComponent services={services} />
+                            </Col>
+                            <Col lg="5">
+                                <CarOffersComponent
+                                    carOffers={carOffers}
+                                    preview
+                                    onModalOpen={(offer) => {
+                                        setModalContent(ModalContent.viewCarOffer);
+                                        setModalCarOffer(offer);
+                                        setModalShow(true);
+                                    }}
+                                />
+                            </Col>
+                        </Row>
+                    </Container>
+                );
+            case BodyContent.carOffers:
+                return (
+                    <Container>
+                        <CarOffersComponent
+                            carOffers={carOffers}
+                            onModalOpen={(offer) => {
+                                setModalContent(ModalContent.viewCarOffer);
+                                setModalCarOffer(offer);
+                                setModalShow(true);
+                            }}
+                        />
+                    </Container>
+                );
+            case BodyContent.ratings:
+                return (
+                    <Container>
+                        <RatingsComponent
+                            ratings={ratings}
+                            addRating={() => {
+                                setModalContent(ModalContent.addRating);
+                                setModalShow(true);
+                            }}
+                        />
+                    </Container>
+                );
+            default:
+                return;
+        }
+    };
+
     const onModalClose = () => {
         setModalShow(false);
         setModalContent(null);
+        setModalCarOffer(undefined);
     };
 
     const onModalError = (error: Error) => {
@@ -56,8 +120,26 @@ export const App: FC = () => {
 
     const renderModalContent = (modalContent: ModalContent | null) => {
         switch (modalContent) {
+            case ModalContent.viewCarOffer:
+                return (
+                    <ViewCarOfferModal
+                        carOffer={modalCarOffer as CarOffer}
+                        equipmentsList={equipmentsList}
+                        onClose={onModalClose}
+                        onContactFormModalOpen={() => setModalContent(ModalContent.contactForm)}
+                    />
+                );
             case ModalContent.addRating:
                 return <AddRatingModal onClose={onModalClose} onSave={fetchData} onError={onModalError} />;
+            case ModalContent.contactForm:
+                return (
+                    <ContactFormModal
+                        onClose={onModalClose}
+                        onSave={fetchData}
+                        onError={onModalError}
+                        carOfferTitle={modalCarOffer?.title ?? undefined}
+                    />
+                );
             default:
                 return;
         }
@@ -72,7 +154,7 @@ export const App: FC = () => {
             </ToastContainer>
             <Modal
                 show={modalShow}
-                onHide={() => setModalShow(false)}
+                onHide={onModalClose}
                 backdrop="static"
                 keyboard={false}
                 size="lg"
@@ -81,40 +163,42 @@ export const App: FC = () => {
             >
                 {renderModalContent(modalContent)}
             </Modal>
-            <Container>
-                <Row>
-                    <Col md="9" style={{ textAlign: 'end' }}>
-                        <h1>Console d&apos;administration GVP</h1>
-                    </Col>
-                    <Col md="3" style={{ textAlign: 'end' }}>
-                        <Button
-                            onClick={() => {
-                                setModalShow(true);
-                                setModalContent(ModalContent.addRating);
-                            }}
-                            style={{ marginTop: '10px' }}
-                        >
-                            Laisser un avis
-                        </Button>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col lg="6">
-                        <ServicesComponent services={services} />
-                    </Col>
-                    <Col lg="6">
-                        <CarOffersComponent carOffers={carOffers} />
-                    </Col>
-                </Row>
-                <Row>
-                    <Col lg="6">
-                        <OpeningHoursComponent openingHours={openingHours} />
-                    </Col>
-                    <Col lg="6">
-                        <RatingsComponent ratings={ratings} />
-                    </Col>
-                </Row>
-            </Container>
+            <Card bg="light" className="vh-100 overflow-auto">
+                <Card.Header>
+                    <Navbar>
+                        <Navbar.Brand>Garage V. Parrot</Navbar.Brand>
+                        <Nav>
+                            <Nav.Item>
+                                <Nav.Link onClick={() => setBodyContent(BodyContent.homepage)}>Accueil</Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link onClick={() => setBodyContent(BodyContent.carOffers)}>
+                                    Toutes les annonces
+                                </Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link onClick={() => setBodyContent(BodyContent.ratings)}>Avis clients</Nav.Link>
+                            </Nav.Item>
+                        </Nav>
+                    </Navbar>
+                </Card.Header>
+                <Card.Body>{renderBodyContent()}</Card.Body>
+                <Card.Footer>
+                    <Row>
+                        <Col>
+                            <OpeningHoursComponent openingHours={openingHours} />
+                        </Col>
+                        <Col>
+                            <ContactComponent
+                                onModalOpen={() => {
+                                    setModalContent(ModalContent.contactForm);
+                                    setModalShow(true);
+                                }}
+                            />
+                        </Col>
+                    </Row>
+                </Card.Footer>
+            </Card>
         </>
     );
 };
